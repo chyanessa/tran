@@ -3,211 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>詞魂 Lyric Vision | 意境翻譯器</title>
+    <title>詞魂 Free | 免費意境翻譯器</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --muji-bg: #F5F5F3; --muji-red: #7F1111; --muji-gray: #555555; }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--muji-bg); color: #333; margin: 0; padding-bottom: 90px; }
+        body { background-color: #F5F5F3; font-family: sans-serif; }
         .serif { font-family: 'Noto Serif TC', serif; }
-        .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        .muji-card { background: white; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .loading-shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .muji-card { background: white; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .btn-active { background-color: #7F1111 !important; color: white !important; }
     </style>
 </head>
-<body>
+<body class="p-4">
+    <div class="max-w-md mx-auto">
+        <header class="text-center py-8">
+            <h1 class="serif text-2xl font-bold tracking-widest text-gray-800">詞魂 Free</h1>
+            <p class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">No API Key Required</p>
+        </header>
 
-    <header class="p-6 bg-white border-b border-gray-100 sticky top-0 z-50 flex justify-between items-center">
-        <div>
-            <h1 class="serif text-xl font-bold tracking-[0.2em] text-gray-800">詞魂</h1>
-            <p class="text-[9px] text-gray-400 uppercase tracking-widest">Lyric Vision Translator</p>
-        </div>
-        <button onclick="toggleModal('settings-modal')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
-            <i class="fa-solid fa-sliders"></i>
-        </button>
-    </header>
-
-    <main class="p-4 max-w-xl mx-auto">
-        <div id="translator-tab" class="tab-content active">
-            <div class="muji-card p-6 mb-6">
-                <input type="text" id="song-query" placeholder="歌曲名稱 - 歌手" 
-                       class="w-full border-b border-gray-100 py-3 mb-6 text-lg serif focus:border-red-800 transition-colors bg-transparent">
-                
-                <div class="mb-6">
-                    <label class="text-[10px] text-gray-400 uppercase tracking-widest block mb-2">Original Lyrics</label>
-                    <textarea id="raw-lyrics" rows="8" placeholder="在此貼上歌詞原文..." 
-                              class="w-full p-4 bg-gray-50 rounded-sm text-sm leading-relaxed focus:bg-white transition-all"></textarea>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <select id="lang-select" class="flex-1 bg-gray-100 border-none p-3 rounded-sm text-sm text-gray-600 outline-none">
-                        <option value="Japanese">🇯🇵 日本語 (物哀/詩意)</option>
-                        <option value="Korean">🇰🇷 한국어 (情感張力)</option>
-                        <option value="English">🇺🇸 English (節奏/雙關)</option>
-                        <option value="Thai">🇹🇭 ภาษาไทย (華麗/溫柔)</option>
-                    </select>
-                    <button onclick="translateAction()" id="btn-translate" 
-                            class="bg-[#7F1111] text-white px-8 py-3 rounded-sm font-medium hover:bg-black transition-all">
-                        感悟翻譯
-                    </button>
-                </div>
+        <div class="muji-card p-6">
+            <label class="text-xs font-bold text-gray-400 mb-4 block uppercase tracking-wider">選擇來源語言</label>
+            <div class="grid grid-cols-2 gap-2 mb-6">
+                <button onclick="setLang('en')" id="lang-en" class="lang-btn py-2 border text-xs rounded-sm">English</button>
+                <button onclick="setLang('ja')" id="lang-ja" class="lang-btn py-2 border text-xs rounded-sm">日本語</button>
+                <button onclick="setLang('ko')" id="lang-ko" class="lang-btn py-2 border text-xs rounded-sm">한국어</button>
+                <button onclick="setLang('th')" id="lang-th" class="lang-btn py-2 border text-xs rounded-sm">ภาษาไทย</button>
             </div>
 
-            <div id="result-area" class="hidden">
-                <div class="muji-card p-8 border-t-4 border-[#7F1111] relative">
-                    <div id="out-header" class="mb-6"></div>
-                    <div id="out-lyrics" class="serif text-lg leading-[2.2] text-gray-800 whitespace-pre-wrap mb-8"></div>
-                    <div id="out-notes" class="p-4 bg-stone-50 text-xs text-stone-500 rounded leading-relaxed"></div>
-                    <button onclick="saveToHistory()" class="mt-6 text-xs text-gray-400 hover:text-red-800 transition-colors">
-                        <i class="fa-regular fa-bookmark mr-2"></i>儲存至歷史紀錄
-                    </button>
-                </div>
-            </div>
+            <textarea id="input-text" rows="8" placeholder="在此貼上歌詞原文..." 
+                      class="w-full p-4 bg-gray-50 text-sm rounded-sm mb-4 outline-none focus:bg-white transition-all border-none"></textarea>
+
+            <button onclick="startFreeTranslate()" id="main-btn" 
+                    class="w-full bg-gray-800 text-white py-4 text-sm font-bold tracking-widest hover:bg-black">
+                開始翻譯
+            </button>
         </div>
 
-        <div id="history-tab" class="tab-content">
-            <h2 class="serif text-xl mb-6 px-2 text-gray-800">歷史紀錄</h2>
-            <div id="history-list" class="space-y-4"></div>
-        </div>
-    </main>
-
-    <nav class="fixed bottom-0 left-0 right-0 glass-nav border-t border-gray-100 flex justify-around py-4 z-40">
-        <button onclick="switchTab('translator')" id="nav-translator" class="flex flex-col items-center gap-1 text-red-800">
-            <i class="fa-solid fa-feather-pointed text-lg"></i>
-            <span class="text-[10px] font-bold">翻譯</span>
-        </button>
-        <button onclick="switchTab('history')" id="nav-history" class="flex flex-col items-center gap-1 text-gray-400">
-            <i class="fa-solid fa-box-archive text-lg"></i>
-            <span class="text-[10px] font-bold">歷史</span>
-        </button>
-    </nav>
-
-    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-        <div class="muji-card w-full max-w-sm p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="serif font-bold text-lg">引擎設定</h3>
-                <button onclick="toggleModal('settings-modal')"><i class="fa-solid fa-xmark text-gray-300"></i></button>
+        <div id="result-box" class="hidden mt-6 muji-card p-8 border-t-4 border-[#7F1111]">
+            <h3 class="serif text-[#7F1111] font-bold mb-4">中文意境翻譯</h3>
+            <div id="out-content" class="serif leading-loose text-gray-800 whitespace-pre-wrap text-lg"></div>
+            <div class="mt-6 pt-4 border-t border-gray-100 text-[10px] text-gray-400 italic">
+                * 本工具使用公共翻譯引擎，如需極致詩意請考慮使用 AI 模式。
             </div>
-            <label class="text-[10px] text-gray-400 block mb-2 uppercase">OpenAI API Key</label>
-            <input type="password" id="api-key" placeholder="sk-..." class="w-full border p-3 rounded-sm mb-6 text-sm">
-            <button onclick="saveKey()" class="w-full bg-black text-white py-3 rounded-sm text-sm tracking-widest uppercase">保存設定</button>
         </div>
     </div>
 
     <script>
-        const store = {
-            get: (key) => localStorage.getItem(key),
-            set: (key, val) => localStorage.setItem(key, val)
-        };
+        let selectedLang = 'en';
 
-        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
-        function saveKey() {
-            const key = document.getElementById('api-key').value;
-            if(key) { store.set('lyric_key', key); toggleModal('settings-modal'); alert('密鑰已安全保存'); }
+        function setLang(lang) {
+            selectedLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('btn-active'));
+            document.getElementById('lang-' + lang).classList.add('btn-active');
         }
 
-        function switchTab(name) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(name + '-tab').classList.add('active');
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.replace('text-red-800', 'text-gray-400'));
-            document.getElementById('nav-' + name).classList.replace('text-gray-400', 'text-red-800');
-            if(name === 'history') renderHistory();
-        }
+        // 預設選擇英文
+        setLang('en');
 
-        async function translateAction() {
-            const key = store.get('lyric_key');
-            if(!key) return toggleModal('settings-modal');
+        async function startFreeTranslate() {
+            const text = document.getElementById('input-text').value;
+            const out = document.getElementById('out-content');
+            const btn = document.getElementById('main-btn');
 
-            const query = document.getElementById('song-query').value;
-            const lyrics = document.getElementById('raw-lyrics').value;
-            const lang = document.getElementById('lang-select').value;
-            const btn = document.getElementById('btn-translate');
-
-            if(!lyrics) return alert('請輸入歌詞內容');
+            if (!text) return alert('請輸入文字');
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 感悟中';
-
-            const prompt = `你是一位精通多語言的歌詞翻譯大師。請將以下${lang}歌詞翻譯成繁體中文。
-            規則：1.意境優於字面 2.保留原文特有的情感（如日本的物哀或泰文的溫柔） 3.翻譯需精美如詩。
-            
-            輸出格式請務必符合以下 JSON：
-            { "title": "[歌名 - 歌手] [曲風預估]", "translation": "原文\\n中文翻譯 (交替出現)", "notes": "譯者註解" }
-            
-            歌詞原文：${lyrics}`;
+            btn.innerText = '翻譯中...';
 
             try {
-                const res = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-                    body: JSON.stringify({
-                        model: "gpt-4-turbo-preview",
-                        messages: [{role: "user", content: prompt}],
-                        response_format: { type: "json_object" }
-                    })
+                // 使用 Google Translate 公開 API (透過 Google Scripts 轉發或是直接調用)
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${selectedLang}&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // 拼接翻譯結果
+                let translatedText = "";
+                data[0].forEach(item => {
+                    if (item[0]) translatedText += item[0];
                 });
-                
-                const data = await res.json();
-                const result = JSON.parse(data.choices[0].message.content);
 
-                document.getElementById('result-area').classList.remove('hidden');
-                document.getElementById('out-header').innerHTML = `<h3 class="text-[#7F1111] font-bold serif">${result.title}</h3>`;
-                document.getElementById('out-lyrics').innerText = result.translation;
-                document.getElementById('out-notes').innerHTML = `<strong>譯者註：</strong><br>${result.notes}`;
+                document.getElementById('result-box').classList.remove('hidden');
+                out.innerText = translatedText;
                 
-                window.scrollTo({ top: document.getElementById('result-area').offsetTop - 100, behavior: 'smooth' });
+                window.scrollTo({ top: document.getElementById('result-box').offsetTop - 50, behavior: 'smooth' });
+
             } catch (e) {
-                alert('翻譯失敗，請檢查 Key 是否正確或網路狀態');
+                alert('翻譯失敗，請檢查網路連線。');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '感悟翻譯';
+                btn.innerText = '開始翻譯';
             }
         }
-
-        function saveToHistory() {
-            let history = JSON.parse(store.get('history') || '[]');
-            const item = {
-                title: document.getElementById('out-header').innerText,
-                content: document.getElementById('out-lyrics').innerText,
-                notes: document.getElementById('out-notes').innerText,
-                time: new Date().toLocaleString()
-            };
-            history.unshift(item);
-            store.set('history', JSON.stringify(history.slice(0, 15)));
-            alert('存檔成功');
-        }
-
-        function renderHistory() {
-            const history = JSON.parse(store.get('history') || '[]');
-            const list = document.getElementById('history-list');
-            if(history.length === 0) { list.innerHTML = '<p class="text-center text-gray-400 py-20 text-xs">尚無存檔</p>'; return; }
-            list.innerHTML = history.map((h, i) => `
-                <div class="muji-card p-5 border-l-2 border-stone-200">
-                    <p class="text-[10px] text-stone-300 mb-1">${h.time}</p>
-                    <h4 class="serif font-bold text-gray-700 mb-2">${h.title}</h4>
-                    <p class="text-xs text-gray-400 line-clamp-2">${h.content}</p>
-                    <button onclick="restoreHistory(${i})" class="mt-3 text-[10px] text-red-800 uppercase tracking-widest">載入內容</button>
-                </div>
-            `).join('');
-        }
-
-        function restoreHistory(index) {
-            const history = JSON.parse(store.get('history'));
-            const item = history[index];
-            switchTab('translator');
-            document.getElementById('result-area').classList.remove('hidden');
-            document.getElementById('out-header').innerHTML = `<h3 class="text-[#7F1111] font-bold serif">${item.title}</h3>`;
-            document.getElementById('out-lyrics').innerText = item.content;
-            document.getElementById('out-notes').innerText = item.notes;
-        }
-
-        // 初始化 Key 顯示
-        if(store.get('lyric_key')) document.getElementById('api-key').value = store.get('lyric_key');
     </script>
 </body>
 </html>
