@@ -3,116 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>詞魂 AI Free | Gemini 驅動</title>
+    <title>詞魂 HK | 直接存取翻譯器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #F5F5F3; font-family: sans-serif; padding-bottom: 40px; }
+        body { background-color: #F8F7F2; font-family: sans-serif; }
         .serif { font-family: 'Noto Serif TC', serif; }
-        .muji-card { background: white; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .loading { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .muji-card { background: white; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .btn-loading { pointer-events: none; opacity: 0.6; }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-md mx-auto">
-        <header class="flex justify-between items-center py-8">
-            <div>
-                <h1 class="serif text-2xl font-bold tracking-widest text-gray-800">詞魂 AI</h1>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest">Powered by Gemini 1.5 Flash</p>
-            </div>
-            <button onclick="toggleSettings()" class="text-gray-300"><i class="fa-solid fa-key"></i></button>
+        <header class="py-10 text-center">
+            <h1 class="serif text-3xl font-bold tracking-widest text-gray-800">詞魂 HK</h1>
+            <p class="text-[10px] text-gray-400 mt-2 tracking-[0.3em] uppercase">Hong Kong Direct Access</p>
         </header>
 
-        <div id="settings" class="hidden muji-card p-6 mb-6 border-b-2 border-amber-200">
-            <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block">輸入您的免費 Gemini API Key</label>
-            <input type="password" id="api-key" placeholder="在此貼上 Key..." class="w-full border-b py-2 text-sm outline-none">
-            <button onclick="saveSettings()" class="mt-4 w-full bg-stone-800 text-white py-2 text-xs rounded-sm">儲存設定</button>
-        </div>
-
         <div class="muji-card p-6">
-            <textarea id="input-text" rows="8" placeholder="貼上英/日/韓/泰歌詞原文..." 
-                      class="w-full p-4 bg-gray-50 text-sm rounded-sm mb-4 outline-none focus:bg-white transition-all"></textarea>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">歌詞原文</span>
+                <select id="src-lang" class="text-[10px] bg-gray-100 p-1 rounded">
+                    <option value="en-GB">英文 (EN)</option>
+                    <option value="ja-JP">日文 (JP)</option>
+                    <option value="ko-KR">韓文 (KR)</option>
+                    <option value="th-TH">泰文 (TH)</option>
+                </select>
+            </div>
 
-            <button onclick="startAiTranslate()" id="main-btn" 
-                    class="w-full bg-[#7F1111] text-white py-4 text-sm font-bold tracking-widest hover:bg-black transition-colors">
-                AI 意境翻譯
+            <textarea id="input-text" rows="10" placeholder="貼上原文..." 
+                      class="w-full p-4 bg-gray-50 text-sm rounded-sm mb-4 outline-none border-none focus:ring-1 focus:ring-stone-200"></textarea>
+
+            <button onclick="translateNow()" id="main-btn" 
+                    class="w-full bg-stone-800 text-white py-4 text-sm font-bold tracking-widest hover:bg-black transition-all">
+                感悟翻譯
             </button>
         </div>
 
-        <div id="result-box" class="hidden mt-6 animate-in fade-in duration-700">
-            <div class="muji-card p-8 border-t-4 border-[#7F1111]">
-                <h3 class="serif text-[#7F1111] font-bold mb-4">AI 譯文</h3>
-                <div id="out-content" class="serif leading-[2.2] text-gray-800 whitespace-pre-wrap text-lg"></div>
-            </div>
+        <div id="result-box" class="hidden mt-6 muji-card p-8 border-t-4 border-stone-800">
+            <h3 class="serif text-stone-800 font-bold mb-4">意境譯文</h3>
+            <div id="out-content" class="serif leading-[2.2] text-gray-800 whitespace-pre-wrap text-lg"></div>
         </div>
     </div>
 
     <script>
-        function toggleSettings() { document.getElementById('settings').classList.toggle('hidden'); }
-        
-        function saveSettings() {
-            localStorage.setItem('gemini_key', document.getElementById('api-key').value);
-            toggleSettings();
-            alert('金鑰已儲存');
-        }
-
-        async function startAiTranslate() {
-            const key = localStorage.getItem('gemini_key');
+        async function translateNow() {
             const text = document.getElementById('input-text').value;
+            const src = document.getElementById('src-lang').value;
             const btn = document.getElementById('main-btn');
             const out = document.getElementById('out-content');
 
-            if (!key) return alert('請先點擊右上角設定 API Key (Gemini 是免費的)');
             if (!text) return alert('請輸入內容');
 
-            btn.disabled = true;
-            btn.classList.add('loading');
-            btn.innerText = 'AI 感悟中...';
+            btn.innerText = '正在連結 AI...';
+            btn.classList.add('btn-loading');
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-            
-            const payload = {
-                contents: [{
-                    parts: [{
-                        text: `你是一位大師級歌詞翻譯家。請將以下歌詞翻譯成繁體中文。
-                        要求：
-                        1. 意境優美，具備詩意與電影感。
-                        2. 根據原文語言（英、日、韓、泰）調整語感。
-                        3. 輸出格式：原文與翻譯交替排列。
-                        
-                        內容：\n${text}`
-                    }]
-                }]
-            };
+            // 使用 MyMemory API (無須 Key，在香港可直接存取)
+            // 這是目前免 VPN 下最穩定的公共翻譯接口之一
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|zh-TW`;
 
             try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(url);
                 const data = await response.json();
-                const aiResult = data.candidates[0].content.parts[0].text;
-
-                document.getElementById('result-box').classList.remove('hidden');
-                out.innerText = aiResult;
-                window.scrollTo({ top: document.getElementById('result-box').offsetTop - 50, behavior: 'smooth' });
-
+                
+                if (data.responseData) {
+                    document.getElementById('result-box').classList.remove('hidden');
+                    out.innerText = data.responseData.translatedText;
+                    window.scrollTo({ top: document.getElementById('result-box').offsetTop - 20, behavior: 'smooth' });
+                } else {
+                    throw new Error();
+                }
             } catch (e) {
-                alert('翻譯失敗。請檢查 API Key 是否正確或額度。');
+                alert('伺服器繁忙，請稍後再試。');
             } finally {
-                btn.disabled = false;
-                btn.classList.remove('loading');
-                btn.innerText = 'AI 意境翻譯';
+                btn.innerText = '感悟翻譯';
+                btn.classList.remove('btn-loading');
             }
-        }
-
-        // 初始化檢查
-        if(localStorage.getItem('gemini_key')) {
-            document.getElementById('api-key').value = localStorage.getItem('gemini_key');
         }
     </script>
 </body>
